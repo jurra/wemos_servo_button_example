@@ -12,6 +12,7 @@
 #include <WiFiUdp.h>
 #include "secrets.h"
 
+// We deconstruct the IP address to pass it to the WiFiUDP.beginPacket() function
 IPAddress sendAddr(IP_ADDRESS[0],
                    IP_ADDRESS[1],
                    IP_ADDRESS[2],
@@ -21,19 +22,26 @@ const unsigned int sendPort = 1234; // UDP port to send packets to
 
 WiFiUDP udp;
 
+#define BUTTON_PIN 2
+
 void setup() {
-  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);
-  while (WiFi.status() != WL_CONNECTED) {
+  pinMode(BUTTON_PIN, INPUT_PULLUP); // Set the button pin as input
+  
+  Serial.begin(9600);                // Initialize serial port to send and receive data
+ 
+  WiFi.begin(WIFI_SSID, WIFI_PASSWORD);     // Connect to the network
+  while (WiFi.status() != WL_CONNECTED) {   // Wait for connection
     delay(1000);
   }
 
-  udp.begin(1234); // UDP port to listen for incoming packets
+  udp.begin(1234); // UDP port we are targeting to send packets
 }
 
 void loop() {
-  String message = "Hello, world!"; // message to send
-  udp.beginPacket(sendAddr, sendPort);
-  udp.write((uint8_t*)message.c_str(), message.length());
-  udp.endPacket();
-  delay(5000);
+   if (digitalRead(BUTTON_PIN)== LOW){
+        Serial.println("Button pressed");    // A check that the circuit is working
+        udp.beginPacket(sendAddr, sendPort); // Initialize the packet
+        udp.printf("turn_servo");            // Message to send
+        udp.endPacket();                     // Send the packet
+   }
 }
